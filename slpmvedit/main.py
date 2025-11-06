@@ -51,7 +51,7 @@ def mklabelmovie(
     """
 
     # get indice information
-    idx_frame = tpulse2idx(t_min, t_max, path_trgmat)[0]
+    idx_frame = set(tpulse2idx(t_min, t_max, path_trgmat)[0])
 
     # load sleap csv data
     csvdata = pd.read_csv(path_csv)
@@ -126,7 +126,7 @@ def mklabelmovie_v1(
 
     # get indice information
     idxtinfo = tpulse2idx(t_min, t_max, path_trgmat)
-    idx_frame = idxtinfo[0]
+    idx_frame = set(idxtinfo[0])
     t_frame = idxtinfo[1]
 
     # load sleap csv data
