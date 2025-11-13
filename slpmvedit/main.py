@@ -30,6 +30,29 @@ def tpulse2idx(t_min: float, t_max: float, pathdata: str) -> int:
     return rlt, rlt_t
 
 
+def read_slpcsv(path_csv: str, path_mv: str) -> dict:
+    # load data
+    csvdata = pd.read_csv(path_csv)
+    cap = cv2.VideoCapture(path_mv)
+
+    # number of frames
+    n_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_idx = range(0, n_frame)
+
+    # processing for each individual
+    ids = csvdata["track"].unique()
+
+    output = {}
+
+    for id in ids:
+        csvdata_id = csvdata[csvdata["track"] == id].copy()
+        csvdata_id = csvdata_id.set_index("frame_idx").reindex(frame_idx)
+
+        output[id] = csvdata_id
+
+    return output
+
+
 def mklabelmovie(
     t_min: float,
     t_max: float,
