@@ -106,7 +106,9 @@ def mklabelmovie(
     idx_frame = set(tpulse2idx(t_min, t_max, path_trgmat)[0])
 
     # load sleap csv data
-    csvdata = pd.read_csv(path_csv)
+    slpcsvdata = read_slpcsv(path_csv, path_mv)
+    ids = list[slpcsvdata.keys()]
+    csvdata = slpcsvdata[ids[0]]
 
     # body parts and colors
     bodyparts = [c[:-2] for c in csvdata.columns if c.endswith(".x")]
