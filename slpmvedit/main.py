@@ -31,6 +31,31 @@ def tpulse2idx(t_min: float, t_max: float, pathdata: str) -> int:
 
 
 def read_slpcsv(path_csv: str, path_mv: str) -> dict:
+    """
+    Load a SLEAP-exported CSV and corresponding movie file, then generate
+    per-individual tracking data aligned to the full set of video frame indices.
+
+    This function reads a SLEAP CSV file that contains tracking results
+    (frame_idx, track ID, keypoint coordinates, etc.), extracts all unique
+    individuals (track IDs), and constructs a clean DataFrame for each
+    individual. Missing frames (i.e., frames where SLEAP did not detect
+    the individual) are added and filled with NaN by reindexing against
+    the total number of frames in the movie file.
+
+    If only a single individual is present, the result is returned as
+    output["track_0"]. If multiple individuals exist, the dictionary keys
+    correspond to the original track IDs in the CSV.
+
+    Args:
+        path_csv (str): filepath for sleap csv
+        path_mv (str): filepath for input movie
+
+    Returns:
+        dict: A dictionary mapping each individual/track to a DataFrame
+            whose index corresponds to all movie frames (0 to n_frame-1),
+            with missing frames filled with NaN.
+    """
+
     # load data
     csvdata = pd.read_csv(path_csv)
     cap = cv2.VideoCapture(path_mv)
@@ -44,11 +69,15 @@ def read_slpcsv(path_csv: str, path_mv: str) -> dict:
 
     output = {}
 
-    for id in ids:
-        csvdata_id = csvdata[csvdata["track"] == id].copy()
-        csvdata_id = csvdata_id.set_index("frame_idx").reindex(frame_idx)
+    if len(ids) < 2:
+        csvdata = csvdata.set_index("frame_idx").reindex(frame_idx)
+        output["track_0"] = csvdata
+    else:
+        for id in ids:
+            csvdata_id = csvdata[csvdata["track"] == id].copy()
+            csvdata_id = csvdata_id.set_index("frame_idx").reindex(frame_idx)
 
-        output[id] = csvdata_id
+            output[id] = csvdata_id
 
     return output
 
