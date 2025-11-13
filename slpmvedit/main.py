@@ -107,7 +107,7 @@ def mklabelmovie(
 
     # load sleap csv data
     slpcsvdata = read_slpcsv(path_csv, path_mv)
-    ids = list[slpcsvdata.keys()]
+    ids = list(slpcsvdata.keys())
     csvdata = slpcsvdata[ids[0]]
 
     # body parts and colors
@@ -136,10 +136,13 @@ def mklabelmovie(
 
         if frame_current in idx_frame:
             for ii, b in enumerate(bodyparts):
-                xx = int(csvdata.loc[frame_current, b + ".x"])
-                yy = int(csvdata.loc[frame_current, b + ".y"])
-                color = tuple(int(c) for c in colors[ii])
-                cv2.circle(frame, (xx, yy), 3, color, -1)
+                xv = csvdata.loc[frame_current, b + ".x"]
+                yv = csvdata.loc[frame_current, b + ".y"]
+                if not np.isnan(xv) and not np.isnan(yv):
+                    xx = int(csvdata.loc[frame_current, b + ".x"])
+                    yy = int(csvdata.loc[frame_current, b + ".y"])
+                    color = tuple(int(c) for c in colors[ii])
+                    cv2.circle(frame, (xx, yy), 3, color, -1)
 
             out.write(frame)
 
