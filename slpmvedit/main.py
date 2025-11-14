@@ -147,6 +147,8 @@ def mklabelmovie(
                 out.write(frame)
 
             frame_current += 1
+            if frame_current % 1000 == 0:
+                print(frame_current)
 
     else:
         # color for each individual
@@ -174,6 +176,8 @@ def mklabelmovie(
                 out.write(frame)
 
             frame_current += 1
+            if frame_current % 1000 == 0:
+                print(frame_current)
 
     cap.release()
     out.release()
@@ -297,6 +301,8 @@ def mklabelmovie_v1(
             i += 1
 
         frame_current += 1
+        if frame_current % 1000 == 0:
+            print(frame_current)
 
     cap.release()
     out.release()
