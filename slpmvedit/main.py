@@ -139,10 +139,8 @@ def mklabelmovie(
                 xv = csvdata.loc[frame_current, b + ".x"]
                 yv = csvdata.loc[frame_current, b + ".y"]
                 if not np.isnan(xv) and not np.isnan(yv):
-                    xx = int(csvdata.loc[frame_current, b + ".x"])
-                    yy = int(csvdata.loc[frame_current, b + ".y"])
                     color = tuple(int(c) for c in colors[ii])
-                    cv2.circle(frame, (xx, yy), 3, color, -1)
+                    cv2.circle(frame, (int(xv), int(yv)), 3, color, -1)
 
             out.write(frame)
 
@@ -187,7 +185,9 @@ def mklabelmovie_v1(
     t_frame = idxtinfo[1]
 
     # load sleap csv data
-    csvdata = pd.read_csv(path_csv)
+    slpcsvdata = read_slpcsv(path_csv, path_mv)
+    ids = list(slpcsvdata.keys())
+    csvdata = slpcsvdata[ids[0]]
 
     # body parts and colors
     bodyparts = [c[:-2] for c in csvdata.columns if c.endswith(".x")]
@@ -222,7 +222,7 @@ def mklabelmovie_v1(
 
     # run
     frame_current = 0
-    ii = 0
+    i = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -230,8 +230,8 @@ def mklabelmovie_v1(
 
         if frame_current in idx_frame:
             # subset data
-            twin_min = t_frame[ii] - win_disp / 2
-            twin_max = t_frame[ii] + win_disp / 2
+            twin_min = t_frame[i] - win_disp / 2
+            twin_max = t_frame[i] + win_disp / 2
             idx_sub = np.where((tpts >= twin_min) & (tpts <= twin_max))
             tpts_sub = tpts[idx_sub]
             x_sub = x[idx_sub]
@@ -243,7 +243,7 @@ def mklabelmovie_v1(
             line_x.set_data(tpts_sub, x_sub)
             axes.set_xlim(twin_min, twin_max)
             axes.set_ylim(ymin, ymax)
-            line_v.set_data([t_frame[ii], t_frame[ii]], [ymin, ymax])
+            line_v.set_data([t_frame[i], t_frame[i]], [ymin, ymax])
             canvas.draw()
 
             # transform plot into numpy array
@@ -252,11 +252,12 @@ def mklabelmovie_v1(
             plot_img = cv2.resize(plot_img, (w, h_plot))
 
             # update video picture
-            for jj, b in enumerate(bodyparts):
-                xx = int(csvdata.loc[frame_current, b + ".x"])
-                yy = int(csvdata.loc[frame_current, b + ".y"])
-                color = tuple(int(c) for c in colors[jj])
-                cv2.circle(frame, (xx, yy), 3, color, -1)
+            for ii, b in enumerate(bodyparts):
+                xv = csvdata.loc[frame_current, b + ".x"]
+                yv = csvdata.loc[frame_current, b + ".y"]
+                if not np.isnan(xv) and not np.isnan(yv):
+                    color = tuple(int(c) for c in colors[ii])
+                    cv2.circle(frame, (int(xv), int(yv)), 3, color, -1)
 
             # combine
             combined_img = np.vstack((frame, plot_img))
@@ -264,7 +265,7 @@ def mklabelmovie_v1(
             # output
             out.write(combined_img)
 
-            ii += 1
+            i += 1
 
         frame_current += 1
 
