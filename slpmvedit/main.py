@@ -108,14 +108,6 @@ def mklabelmovie(
     # load sleap csv data
     slpcsvdata = read_slpcsv(path_csv, path_mv)
     ids = list(slpcsvdata.keys())
-    csvdata = slpcsvdata[ids[0]]
-
-    # body parts and colors
-    bodyparts = [c[:-2] for c in csvdata.columns if c.endswith(".x")]
-    N = len(bodyparts)
-    colors = np.linspace(0, 255, N).astype(np.uint8)
-    colors = cv2.applyColorMap(colors.reshape(-1, 1), cv2.COLORMAP_HSV)
-    colors = colors.reshape(N, 3)
 
     # load video
     cap = cv2.VideoCapture(path_mv)
@@ -129,22 +121,59 @@ def mklabelmovie(
 
     # run
     frame_current = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
 
-        if frame_current in idx_frame:
-            for ii, b in enumerate(bodyparts):
-                xv = csvdata.loc[frame_current, b + ".x"]
-                yv = csvdata.loc[frame_current, b + ".y"]
-                if not np.isnan(xv) and not np.isnan(yv):
-                    color = tuple(int(c) for c in colors[ii])
-                    cv2.circle(frame, (int(xv), int(yv)), 3, color, -1)
+    if len(ids) < 2:
+        # body parts and colors
+        csvdata = slpcsvdata[ids[0]]
+        bodyparts = [c[:-2] for c in csvdata.columns if c.endswith(".x")]
+        N = len(bodyparts)
+        colors = np.linspace(0, 255, N).astype(np.uint8)
+        colors = cv2.applyColorMap(colors.reshape(-1, 1), cv2.COLORMAP_HSV)
+        colors = colors.reshape(N, 3)
 
-            out.write(frame)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        frame_current += 1
+            if frame_current in idx_frame:
+                for ii, b in enumerate(bodyparts):
+                    xv = csvdata.loc[frame_current, b + ".x"]
+                    yv = csvdata.loc[frame_current, b + ".y"]
+                    if not np.isnan(xv) and not np.isnan(yv):
+                        color = tuple(int(c) for c in colors[ii])
+                        cv2.circle(frame, (int(xv), int(yv)), 3, color, -1)
+
+                out.write(frame)
+
+            frame_current += 1
+
+    else:
+        # color for each individual
+        N = len(ids)
+        colors = np.linspace(0, 255, N).astype(np.uint8)
+        colors = cv2.applyColorMap(colors.reshape(-1, 1), cv2.COLORMAP_JET)
+        colors = colors.reshape(N, 3)
+        xname = [c for c in slpcsvdata[ids[0]].columns if c.endswith(".x")]
+        yname = [c for c in slpcsvdata[ids[0]].columns if c.endswith(".y")]
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if frame_current in idx_frame:
+                for ii, id in enumerate(ids):
+                    xx = slpcsvdata[id].loc[frame_current, xname].to_numpy()
+                    yy = slpcsvdata[id].loc[frame_current, yname].to_numpy()
+                    for xi, yi in zip(xx, yy):
+                        if not np.isnan(xi) and not np.isnan(yi):
+                            color = tuple(int(c) for c in colors[ii])
+                            cv2.circle(frame, (int(xi), int(yi)), 3, color, -1)
+
+                out.write(frame)
+
+            frame_current += 1
 
     cap.release()
     out.release()
